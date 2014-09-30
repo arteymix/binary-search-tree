@@ -14,9 +14,9 @@ typedef struct node
  */
 void node_insert(node *p, node *n) 
 {
-    if (strcmp(p->term, n->term))
+    if (strcmp(p->term, n->term) > 0)
     {
-        if ( ! p->left)
+        if (p->left == NULL)
         {
             p->left = n;    
         }
@@ -28,7 +28,7 @@ void node_insert(node *p, node *n)
     } 
     else // == ou < 0
     {
-        if ( p->right == NULL)
+        if (p->right == NULL)
         {
             p->right = n;    
         }
@@ -55,12 +55,22 @@ node *node_search(node *p, char *t)
     {
         return node_search(p->left, t);    
     }
-    else
+    else // < 0
     {
         return node_search(p->right, t);
     }
 
     return NULL;
+}
+
+/**
+ * Supprime un noeud dans l'arbre.
+ */
+node *node_delete(node *p, node *n)
+{
+    // Réinsère les noeuds de gauche et de droite
+    node_insert(p, n->left);
+    node_insert(p, n->right);
 }
 
 void main()
