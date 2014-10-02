@@ -1,3 +1,6 @@
+# Created by https://www.gitignore.io
+
+### C ###
 # Object files
 *.o
 *.ko
@@ -27,3 +30,11 @@
 *.i*86
 *.x86_64
 *.hex
+
+
+### Linux ###
+*~
+
+# KDE directory preferences
+.directory
+
