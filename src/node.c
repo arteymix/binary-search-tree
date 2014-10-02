@@ -1,6 +1,5 @@
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct node
 {
@@ -10,17 +9,19 @@ typedef struct node
 } node;
 
 /**
- * Alloue un nouveau noeud.
+ * Alloue et initialise nouveau noeud.
  */
 node *node_new(char *term, char* definition)
 {
     node *n = malloc(sizeof(node));
     
     if (n == NULL)
-        printf("");
+        exit(EXIT_FAILURE);
     
     n->term = term;
     n->definition = definition;
+    n->left = NULL;
+    n->right = NULL;
     
     return n;
 }
@@ -82,7 +83,7 @@ node *node_search(node *p, char *t)
 /**
  * Supprime un noeud dans l'arbre.
  */
-node *node_delete(node *p, char *term)
+void node_delete(node *p, char *term)
 {
     node *n, *left, *right = NULL;
 
@@ -132,77 +133,36 @@ char *node_definition(node *p, node *n)
 {
     char *definition = strtok(n->definition, "+");
     char *token;
-    node *s;
-    char *sous_definition;
     
     // On parse tous les sous-termes séparés par l'addition
     while (token = strtok(NULL, "+"))
     {
-        s = node_search(p, token);
+        // on trouve le noeud du sous-terme dans l'arbre
+        node *s = node_search(p, token);
+        char *s_definition;
        
         if (s == NULL)
         {
             // définition inconnue d'un sous-terme    
+            s_definition = "";
         }
         else
         {
-            // l'espace pour la définition courante, 
-            definition = realloc(definition, strlen(definition) + 1 + strlen(token));
-            
-            if (definition == NULL)
-                exit("impossible de générer une définition pour ");
+            // on trouve la sous-définition
+            s_definition = node_definition(p, s);
+        }
 
-            // calcul de la définition du sous-terme
-            sous_definition = node_definition(s);
+        // réallocation d'espace pour stocker la nouvelle définition
+        definition = realloc(definition, strlen(definition) + 1 + strlen(s_definition));
 
-            strcat(definition, s->definition);
-       }
+        // plus de place pour allouer la définition
+        if (definition == NULL)
+            exit(EXIT_FAILURE);
+
+        // on concaténe le tout
+        strcat(definition, " ");
+        strcat(definition, s_definition);
     }
     
-    free(s);
-    
     return definition;
-}
-
-void main()
-{
-    node *root = malloc(sizeof(node));
-    size_t line_size = 1024;
-    char *line = malloc(line_size);
-    
-    do
-    {
-        printf(">>> ");
-        getline(&line, &line_size, stdin);
-
-        char *operand = strtok(line, "=");
-        
-        if (operand == NULL)
-        {
-            // il s'agit d'une recherche de terme
-            node *n = node_search(root, line);
-            
-            if (n == NULL)
-            {
-                printf("terme inconnu");
-            }
-            else
-            {
-                char* def_token = strtok(n->definition, "+");
-                
-            }
-        }
-        else
-        {
-            char *token = NULL;
-            
-            // il s'agit d'une assignation de terme
-            // opération sur les arguments
-            while (token = strtok(NULL, "+"))
-            {
-                printf(token);
-            }
-        }
-    } 
-    while (1);
 }
