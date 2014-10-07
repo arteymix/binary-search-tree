@@ -31,7 +31,7 @@ node *node_new(char *term, char* definition)
  */
 void node_insert(node *p, node *n) 
 {
-    if (strcmp(p->term, n->term) > 0)
+    if (strcmp(p->term, n->term) < 0)
     {
         if (p->left == NULL)
         {
@@ -43,7 +43,7 @@ void node_insert(node *p, node *n)
             node_insert(p->left, n);
         }
     } 
-    else // == ou < 0
+    else // == ou > 0
     {
         if (p->right == NULL)
         {
@@ -68,11 +68,11 @@ node *node_search(node *p, char *t)
     {
         return p;
     }
-    else if (cmp > 0)
+    else if (cmp < 0)
     {
         return node_search(p->left, t);    
     }
-    else // < 0
+    else // == ou > 0
     {
         return node_search(p->right, t);
     }

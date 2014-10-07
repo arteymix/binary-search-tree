@@ -74,7 +74,7 @@ int main(void)
     SRunner *sr = srunner_create(s);
  
     srunner_run_all(sr, CK_NORMAL);
-
+    
     srunner_free(sr);
 
     return EXIT_SUCCESS;
