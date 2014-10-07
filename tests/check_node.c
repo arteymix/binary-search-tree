@@ -50,32 +50,7 @@ START_TEST(test_node_definition)
 }
 END_TEST
 
-Suite *node_suite(void)
-{
-    TCase *core_tc = tcase_create("core");
-    tcase_add_test(core_tc, test_node_new);
-    tcase_add_test(core_tc, test_node_search);
-    tcase_add_test(core_tc, test_node_insert);
-    tcase_add_test(core_tc, test_node_delete);
-
-    TCase *definition_tc = tcase_create("definition");
-    tcase_add_test(core_tc, test_node_definition);
-
-    Suite *s = suite_create("node");
-    suite_add_tcase(s, core_tc);
-    suite_add_tcase(s, definition_tc);
-
-    return s;
-}
-
 int main(void)
 {
-    Suite *s = node_suite();
-    SRunner *sr = srunner_create(s);
- 
-    srunner_run_all(sr, CK_NORMAL);
-    
-    srunner_free(sr);
-
     return EXIT_SUCCESS;
 }
