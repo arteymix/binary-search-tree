@@ -10,13 +10,15 @@ typedef struct node
 
 /**
  * Alloue et initialise nouveau noeud.
+ *
+ * Retourne NULL si le noeud ne peut pas être alloué.
  */
 node *node_new(char *term, char* definition)
 {
     node *n = malloc(sizeof(node));
     
     if (n == NULL)
-        exit(EXIT_FAILURE);
+        return NULL;
     
     n->term = term;
     n->definition = definition;
@@ -128,6 +130,8 @@ void node_delete(node *p, char *term)
 
 /**
  * Construit la définition d'un noeud
+ *
+ * Retourne NULL si il n'y a plus d'espace pour allouer la définition.
  */
 char *node_definition(node *p, node *n) 
 {
@@ -157,7 +161,7 @@ char *node_definition(node *p, node *n)
 
         // plus de place pour allouer la définition
         if (definition == NULL)
-            exit(EXIT_FAILURE);
+            return NULL;
 
         // on concaténe le tout
         strcat(definition, " ");

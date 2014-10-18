@@ -5,7 +5,7 @@
 
 int main(void)
 {
-    node *root = malloc(sizeof(node));
+    node *root = node_new("root", "root");
     size_t line_size = 1024;
     char *line = malloc(line_size);
 

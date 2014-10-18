@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <check.h>
+
 #include "../src/node.c"
 
 START_TEST(test_node_new)
