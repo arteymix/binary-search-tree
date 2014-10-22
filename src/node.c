@@ -11,6 +11,9 @@ typedef struct node
 /**
  * Alloue et initialise nouveau noeud.
  *
+ * @param char[]¸term       terme du noeud 
+ * @param char[] definition définition du noeud
+ *
  * Retourne NULL si le noeud ne peut pas être alloué.
  */
 node *node_new(char *term, char* definition)
@@ -19,9 +22,13 @@ node *node_new(char *term, char* definition)
     
     if (n == NULL)
         return NULL;
-    
-    n->term = term;
-    n->definition = definition;
+ 
+    n->term = malloc(sizeof(char) * (strlen(term) + 1));
+    n->definition = malloc(sizeof(char) * (strlen(definition) + 1));
+
+    strcpy(n->term, term);
+    strcpy(n->definition, definition);
+
     n->left = NULL;
     n->right = NULL;
     
@@ -29,11 +36,32 @@ node *node_new(char *term, char* definition)
 }
 
 /**
+ * Libère un noeud et ses enfants récurisvement.
+ *
+ * Cette fonction libère tout ce que node_new alloue, ce qui inclut le terme et 
+ * la définition de chaque noeud.
+ *
+ * @param node noeud à libérer
+ */
+void node_free(node *n)
+{
+    if (n->left)
+        node_free(n->left);
+
+    if (n->right)
+        node_free(n->right);
+
+    free(n->term);
+    free(n->definition);
+    free(n);
+}
+
+/**
  * Insère un noeud contenant un terme et une définition à un noeud donné.
  */
 void node_insert(node *p, node *n) 
 {
-    if (strcmp(p->term, n->term) < 0)
+    if (strcmp(n->term, p->term) < 0)
     {
         if (p->left == NULL)
         {
@@ -64,7 +92,7 @@ void node_insert(node *p, node *n)
  */
 node *node_search(node *p, char *t)
 {
-    int cmp = strcmp(p->term, t);
+    int cmp = strcmp(t, p->term);
 
     if (cmp == 0)
     {
@@ -72,10 +100,16 @@ node *node_search(node *p, char *t)
     }
     else if (cmp < 0)
     {
+        if (p->left == NULL)
+            return NULL;
+
         return node_search(p->left, t);    
     }
     else // == ou > 0
     {
+        if (p->right == NULL)
+            return NULL;
+
         return node_search(p->right, t);
     }
 
@@ -83,25 +117,36 @@ node *node_search(node *p, char *t)
 }
 
 /**
- * Supprime un noeud dans l'arbre.
+ * Trouve un noeud et l'extrait de l'arbre.
+ *
+ * @param p    noeud parent
+ * @param term terme du noeud à supprimer
+ *
+ * @return le noeud supprimé ou NULL si il n'est pas trouvé ou ne peut pas être 
+ *         supprimé.
  */
-void node_delete(node *p, char *term)
+node *node_delete(node *p, char *term)
 {
     node *n, *left, *right = NULL;
 
-    if (strcmp(p->term, term))
+    /* 
+     * si un noeud parent est supprimé, on ne peut pas réinsérer les enfants, 
+     * alors il ne faut pas permettre ce cas.
+     */
+    if (strcmp(p->term, term) == 0)
     {
-        // problématique, car on ne connait pas le parent de p
-        return;
+        return NULL;
     }
 
-    if (strcmp(p->left->term, term) == 0)
+    // noeud à gauche
+    if (p->left && strcmp(term, p->left->term) == 0)
     {
         n = p->left;   
         p->left = NULL;
     }
 
-    if (strcmp(p->right->term, term) == 0)
+    // noeud à droite
+    if (p->right && strcmp(term, p->right->term) == 0)
     {
         n = p->right;
         p->right = NULL;
@@ -111,53 +156,78 @@ void node_delete(node *p, char *term)
     // recherche
     if (n == NULL)
     {
-        if (strcmp(p->term, term) < 0)
-            node_delete(p->left, term);
+        int cmp = strcmp(term, p->term);
 
-        if (strcmp(p->term, term) > 0)
-            node_delete(p->right, term);
+        if (cmp < 0)
+        {
+            if (p->left == NULL)
+                return NULL;
 
-        return;
+            return node_delete(p->left, term);
+        }
+        else // == ou >, mais l'égalité a déjà été vérifiée
+        {
+            if (p->right == NULL)
+                return NULL;
+
+            return node_delete(p->right, term);
+        }
     }
 
-    // réinsère les noeuds dans l'adbre
-    node_insert(p, n->left);
-    node_insert(p, n->right);
+    // réinsère les noeuds orphelins dans l'arbre
+	if (n->left)
+		node_insert(p, n->left);
 
-    // Libère n
-    free(n);
+	if (n->right)
+		node_insert(p, n->right);
+
+    return n;
 }
 
 /**
- * Construit la définition d'un noeud
+ * Construit la définition d'un noeud à partir d'un certain noeud.
  *
- * Retourne NULL si il n'y a plus d'espace pour allouer la définition.
+ * @param node p noeud de recherche pour les sous-terme.
+ * @param node n noeud dont on veut construire la définition.
+ *
+ * @return la définition du noeud ou NULL si il n'y a plus d'espace pour allouer 
+ *         la définition.
  */
-char *node_definition(node *p, node *n) 
+char *node_definition(node *p, char *term) 
 {
-    char *definition = strtok(n->definition, "+");
-    char *token;
+    node *n = node_search(p, term);
+    char *token = strtok(n->definition, "+");
+    char *definition = malloc(strlen(n->definition));
+
+    // mémoire insuffisance pour allouer la définition
+    if (definition == NULL)
+        return NULL;
+
+    // on fait une copie de la définition du noeud
+    strcpy(definition, n->definition);
     
-    // On parse tous les sous-termes séparés par l'addition
+	/* 
+	 * si la définition qu'on a mis est un sous-terme, on a déjà le premier 
+	 * élément, alors on va récupérer les autres sous-termes.
+	 */
     while (token = strtok(NULL, "+"))
     {
         // on trouve le noeud du sous-terme dans l'arbre
         node *s = node_search(p, token);
-        char *s_definition;
-       
-        if (s == NULL)
-        {
-            // définition inconnue d'un sous-terme    
-            s_definition = "";
-        }
-        else
-        {
-            // on trouve la sous-définition
-            s_definition = node_definition(p, s);
-        }
 
-        // réallocation d'espace pour stocker la nouvelle définition
-        definition = realloc(definition, strlen(definition) + 1 + strlen(s_definition));
+        // définition inconnue du sous-terme, on le saute
+        if (s == NULL)
+		{
+            continue;
+		}
+
+		// on construit la sous-définition
+        char *s_definition = node_definition(p, token);
+
+        /* réallocation d'espace pour stocker la définition courante, un espace,
+		 * la définition du sous-noeud et une caractère de fin de ligne \0.
+		 */
+        definition = realloc(definition, strlen(definition) + 1 + strlen(s_definition) + 1);
 
         // plus de place pour allouer la définition
         if (definition == NULL)
