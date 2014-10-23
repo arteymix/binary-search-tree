@@ -105,7 +105,7 @@ START_TEST(test_node_definition_compound)
     node *b = node_new("b", "you");
     node *c = node_new("c", "lie");
 
-    node_insert(root, a); 
+    node_insert(root, a);
     node_insert(root, b);
     node_insert(root, c);
 
