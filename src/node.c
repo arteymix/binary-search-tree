@@ -12,7 +12,7 @@ node;
 /**
  * Alloue et initialise nouveau noeud.
  *
- * @param char[]¸term       terme du noeud
+ * @param char[] term       terme du noeud
  * @param char[] definition définition du noeud
  *
  * Retourne NULL si le noeud ne peut pas être alloué.
@@ -184,6 +184,10 @@ node *node_delete(node *p, char *term)
 	if (n->right)
 		node_insert(p, n->right);
 
+    // on perd les références vers les noeuds
+    n->left = NULL;
+    n->right = NULL;
+
     return n;
 }
 
@@ -209,18 +213,16 @@ char *node_definition(node *p, char *term)
     // on fait une copie de la définition du noeud
     strcpy(definition, n->definition);
 
-    // définition récursive
-    if (strcmp(term, definition) == 0)
-        return definition;
 
     // on tokenize la définition pour trouver les définitions des sous-termes
-    char *token = strtok(definition, "+");
+    char *saveptr;
+    char *token = strtok_r(definition, "+", &saveptr);
 
 	/*
 	 * si la définition qu'on a mis est un sous-terme, on a déjà le premier
 	 * élément, alors on va récupérer les autres sous-termes.
 	 */
-    while (token = strtok(NULL, "+"))
+    while (token = strtok_r(NULL, "+", &saveptr))
     {
         // on trouve le noeud du sous-terme dans l'arbre
         node *s = node_search(p, token);
@@ -230,11 +232,11 @@ char *node_definition(node *p, char *term)
             continue;
 
 		// on construit la sous-définition
-        char *s_definition = node_definition(p, token);
+        char *s_definition = node_definition(p, s->term);
 
         /* réallocation d'espace pour stocker la définition courante, un espace,
-		 * la définition du sous-noeud et une caractère de fin de ligne \0.
-		 */
+         * la définition du sous-noeud et une caractère de fin de ligne \0.
+         */
         definition = realloc(definition, strlen(definition) + 1 + strlen(s_definition) + 1);
 
         // plus de place pour allouer la définition
