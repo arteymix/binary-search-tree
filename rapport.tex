@@ -61,7 +61,7 @@ besoin d'appeler \texttt{free} sur la valeur retournée.
 Tandis que d'autres nécéssitent une gestion mémoire par l'appelant:
 \texttt{node\_new} et \texttt{node\_definition}.
 
-\section{Analyse syntaxique}
+\subsection{Analyse syntaxique}
 L'analyse syntaxique d'un requête est faite à partir de \texttt{strtok}. On
 l'appele initialement avec une chaîne et un caractère qui découpe la chaîne en
 symboles. La fonction déplace le caractère terminal \texttt{\\0} sur le symbole
@@ -93,7 +93,7 @@ L'ajout d'une définition se fait avec la fonction \texttt{node\_insert}. Il fau
 par contre vérifier si la définition n'est pas déjà dans l'arbre avec
 \texttt{node\_search} et remplacer la définition existante.
 
-\subsection{}
+\subsection{Traitement des erreurs}
 Les fonctions qui allouent de la mémoire retournent \texttt{NULL} lorsque cela
 n'est plus possible. La gestion des erreurs est faite exclusivement dans la
 fonction principale: afficher un message d'erreur, libérer de l'espace, etc...
@@ -104,9 +104,10 @@ pour poursuivre l'exécution du programme.
 
 Pour garantir l'exactitude du code, des tests unitaires ont été écrit pour
 chaque fonction du fichier \texttt{node.c}. Pour exécuter les tests, il suffit
-d'installer la librarie \url{http://check.sourceforge.net/}
+d'installer la librarie check (\url{http://check.sourceforge.net/}) et de lancer
+\texttt{make check}.
 
-\subsection{}
+\subsection{Récupération de l'espace mémoire}
 La récupération mémoire se fait principalement sur les noeuds supprimés et les
 définitions construitent. La fonction \texttt{node\_free} permet de libérer
 récursivement un noeud. À la fin de l'exécution du programme, elle est appelée

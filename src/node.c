@@ -259,7 +259,7 @@ char *node_definition(node *p, char *term)
 	 * si la définition qu'on a mis est un sous-terme, on a déjà le premier
 	 * élément, alors on va récupérer les autres sous-termes.
 	 */
-    while (token = strtok_r(NULL, "+", &saveptr))
+    do
     {
         // on trouve le noeud du sous-terme dans l'arbre
         node *s = node_search(p, token);
@@ -277,19 +277,19 @@ char *node_definition(node *p, char *term)
         /* réallocation d'espace pour stocker la définition courante, un espace,
          * la définition du sous-noeud et une caractère de fin de ligne \0.
          */
-        definition = realloc(definition, strlen(definition) + 1 + strlen(s_definition) + 1);
+        definition = realloc(definition, sizeof(char) * (strlen(definition) + strlen(s_definition) + 1));
 
         // plus de place pour allouer la définition
         if (definition == NULL)
             return NULL;
 
         // on concaténe le tout
-        strcat(definition, " ");
         strcat(definition, s_definition);
 
         if (strcmp(s->term, s->definition) != 0)
             free(s_definition);
     }
+    while (token = strtok_r(NULL, "+", &saveptr));
 
     return definition;
 }
