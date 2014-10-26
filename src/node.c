@@ -58,6 +58,44 @@ void node_free(node *n)
 }
 
 /**
+ * Compte la taille d'un noeud.
+ *
+ * @param node noeud à compter
+ */
+unsigned int node_size(node *n)
+{
+    int size = 1;
+
+    if (n->left)
+        size += node_size(n->left);
+
+    if (n->right)
+        size += node_size(n->right);
+
+    return size;
+}
+
+/**
+ * Compte la profondeur d'un noeud
+ *
+ * @param node noeud à déterminer la profondeur
+ *
+ * @return unsigned int la profondeur du noeud
+ */
+unsigned int node_depth(node *n)
+{
+    unsigned int left_depth, right_depth = 0;
+
+    if (n->left)
+        left_depth = node_depth(n->left);
+
+    if (n->right)
+        right_depth = node_depth(n->right);
+
+    return 1 + (left_depth > right_depth ? left_depth : right_depth);
+}
+
+/**
  * Insère un noeud contenant un terme et une définition à un noeud donné.
  */
 void node_insert(node *p, node *n)
@@ -204,7 +242,7 @@ char *node_definition(node *p, char *term)
 {
     node *n = node_search(p, term);
 
-    char *definition = malloc(sizeof(char) * strlen(n->definition) + 1);
+    char *definition = malloc(sizeof(char) * (strlen(n->term) + strlen(n->definition) + 1));
 
     // mémoire insuffisance pour allouer la définition ou faire une copie du terme
     if (definition == NULL)
@@ -212,7 +250,6 @@ char *node_definition(node *p, char *term)
 
     // on fait une copie de la définition du noeud
     strcpy(definition, n->definition);
-
 
     // on tokenize la définition pour trouver les définitions des sous-termes
     char *saveptr;
@@ -231,8 +268,11 @@ char *node_definition(node *p, char *term)
         if (s == NULL)
             continue;
 
-		// on construit la sous-définition
-        char *s_definition = node_definition(p, s->term);
+        char *s_definition = s->definition;
+
+		// on construit la sous-définition si ce n'est pas un noeud terminal
+        if (strcmp(s->term, s->definition) != 0)
+            s_definition = node_definition(p, s->term);
 
         /* réallocation d'espace pour stocker la définition courante, un espace,
          * la définition du sous-noeud et une caractère de fin de ligne \0.
@@ -247,7 +287,8 @@ char *node_definition(node *p, char *term)
         strcat(definition, " ");
         strcat(definition, s_definition);
 
-        free(s_definition);
+        if (strcmp(s->term, s->definition) != 0)
+            free(s_definition);
     }
 
     return definition;

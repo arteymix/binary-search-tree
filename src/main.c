@@ -46,15 +46,19 @@ void node_print(node *n, int ident)
 int main(void)
 {
     node *root = node_new("root", "root");
-    size_t line_size = 1024;
+    size_t line_size = 1024 * sizeof(char);
     char *line = malloc(line_size);
-
-    printf("Noter que la longueur maximale d'une expression est de 1024 caractères.\n");
 
     do
     {
         printf(">>> ");
         getline(&line, &line_size, stdin);
+
+        if (line == NULL)
+        {
+            printf("Mémoire insuffisante pour allouer la ligne entrée.\n");
+            continue;
+        }
 
         // strip the newline character
         line[strlen(line) - 1] = '\0';
@@ -153,13 +157,13 @@ int main(void)
                 }
             }
         }
-        else if (strcmp("q", line) == 0)
-        {
-            break;
-        }
         else if (strcmp("p", line) == 0)
         {
             node_print(root, 0);
+        }
+        else if (strcmp("q", line) == 0)
+        {
+            break;
         }
         else
         {

@@ -1,0 +1,122 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\title{Concept de langage de programmation \\ Devoir 1}
+\author{Guillaume Poirier-Morency (p1053380)}
+
+\begin{document}
+
+\maketitle
+
+\section{}
+Le programme est composé en deux parties: un programme principal qui traite les
+entrées de l'utilisateur et une définition de noeud avec toutes les fonctions
+qui s'y rapportent.
+
+Le programme principal, \texttt{main.c} initialise la racine de l'arbre de
+recherche et lit séquentiellement les entrées de l'utilisateur dans une boucle
+\texttt{do \{ ... \} while (1);}. Pour chaque itération, une ligne est lue
+depuis l'entrée standard avec la fonction \texttt{getline}.
+
+L'avantage principal d'utiliser \texttt{getline} est qu'il réalloue
+automatiquement le buffer si l'entrée de l'utilisateur est trop grande. Ce qui
+permet de lire des entrées arbitrairement grande.
+
+Ensuite, le programme est découpés en 5 branche: récupérer une définition,
+assigner une définition, supprimer une définition, imprimer l'arbre, quitter le
+programme et gérer les commandes invalides.
+
+La fonction \texttt{strtok} est utiliser pour découper les expressions contenant
+des \texttt{=} et \texttt{+} en symboles utilisables.
+
+Le noeud est défini simplement:
+\lstinputlisting[firstline=4,lastline=10,language=C]{src/node.c}
+
+\texttt{definition} peut être soit simple, soit composé. Une définition composée
+est séparée par des symboles \texttt{+}.
+
+Le fichier \texttt{node.c} définit des fonctions pour:
+\begin{itemize}
+\item créer un noeud ;
+\item insérer un noeud à partir d'un noeud donné ;
+\item calculer la taille d'un noeud ;
+\item rechercher un noeud à partir d'un terme et d'un noeud donné ;
+\item supprimer un noeud à partir d'un terme et d'un noeud donné et retourner ce
+noeud pour le libérer par l'appelant ;
+\item construire une définition à partir d'un terme et d'un noeud donné ;
+\item libérer un noeud récursivement ;
+\end{itemize}
+
+Parmi ces fonctions, certaines sont \texttt{malloc-safe}: \texttt{node\_insert},
+\texttt{node\_size}, \texttt{node\_depth}, \texttt{node\_search} et
+\texttt{node\_delete}. C'est-à-dire que l'appelant n'a pas
+besoin d'appeler \texttt{free} sur la valeur retournée.
+
+Tandis que d'autres nécéssitent une gestion mémoire par l'appelant:
+\texttt{node\_new} et \texttt{node\_definition}.
+
+\section{Analyse syntaxique}
+L'analyse syntaxique d'un requête est faite à partir de \texttt{strtok}. On
+l'appele initialement avec une chaîne et un caractère qui découpe la chaîne en
+symboles. La fonction déplace le caractère terminal \texttt{\\0} sur le symbole
+et retourne un pointeur vers le début de la chaîne.
+
+À chaque appels subséquent avec la valeur NULL comme chaîne et un caractère
+donné, la fonction position un nouveau caractère terminal \texttt{\\0} et
+retourne un pointeur vers le début du nouveau symbole qui doit être lu.
+
+Dans le cas précis d'une analyse d'une expression de la forme
+\texttt{<term>=<term>\{+<term>\}}, on initialise la fonction avec la
+chaîne et le symbole \texttt{=}, ce qui nous donne le terme. Tous les appels
+subséquent découpe sur le symbole \texttt{+}, ce qui nous donnes toutes les
+termes qui construisent la définition du terme donné.
+
+\subsection{Représentation des dictionnaires et définitions}
+Un dictionnaire de définition est représenté par un arbre de recherche. Chaque
+noeud est composé d'un terme et d'une définition \texttt{term} est une chaîne et
+la définition \texttt{definition} est une chaîne. Il y a deux type de
+définition: simple et composée.
+
+Une définition simple comporte un seul élément. \texttt{voilier: bateau} est une
+définition simple.
+
+Une définition composée est séparée par au moins un symbole \texttt{+}.
+\texttt{voilier: bateau+voilé} est une définition composée.
+
+L'ajout d'une définition se fait avec la fonction \texttt{node\_insert}. Il faut
+par contre vérifier si la définition n'est pas déjà dans l'arbre avec
+\texttt{node\_search} et remplacer la définition existante.
+
+\subsection{}
+Les fonctions qui allouent de la mémoire retournent \texttt{NULL} lorsque cela
+n'est plus possible. La gestion des erreurs est faite exclusivement dans la
+fonction principale: afficher un message d'erreur, libérer de l'espace, etc...
+
+L'avantage principal de remonter la gestion d'erreur dans la boucle principale
+est qu'il devient simple de faire un traitement et d'appeler \texttt{continue;}
+pour poursuivre l'exécution du programme.
+
+Pour garantir l'exactitude du code, des tests unitaires ont été écrit pour
+chaque fonction du fichier \texttt{node.c}. Pour exécuter les tests, il suffit
+d'installer la librarie \url{http://check.sourceforge.net/}
+
+\subsection{}
+La récupération mémoire se fait principalement sur les noeuds supprimés et les
+définitions construitent. La fonction \texttt{node\_free} permet de libérer
+récursivement un noeud. À la fin de l'exécution du programme, elle est appelée
+sur la racine.
+
+Pour éviter les fuites de mémoire, tout le code respecte les deux règles qui
+suivent:
+\begin{itemize}
+\item libérer les allocations locale à un bloc lorsque c'est possible
+\item retourner les allocations non libérée (responsabilité de l'appelant)
+\end{itemize}
+
+\end{document}

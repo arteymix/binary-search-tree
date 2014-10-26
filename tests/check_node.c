@@ -12,6 +12,8 @@ START_TEST(test_node_new)
     ck_assert_ptr_eq(NULL, n->left);
     ck_assert_ptr_eq(NULL, n->right);
 
+    ck_assert_int_eq(1, node_size(n));
+
     node_free(n);
 }
 END_TEST
@@ -45,6 +47,8 @@ START_TEST(test_node_insert)
 
     ck_assert_str_eq("a", root->left->definition);
     ck_assert_str_eq("c", root->right->definition);
+
+    ck_assert_int_eq(3, node_size(root));
 
     node_free(root);
 }
@@ -83,6 +87,8 @@ START_TEST(test_node_delete)
     ck_assert_ptr_eq(ll, root->left->left);
     ck_assert_ptr_eq(lr, root->left->right);
 
+    ck_assert_int_eq(4, node_size(root));
+
     ck_assert_ptr_eq(l, node_delete(root, "b"));
 
     // ensure correct reinsertion
@@ -94,6 +100,8 @@ START_TEST(test_node_delete)
     // node is not found in the tree anymore
     ck_assert_ptr_eq(NULL, node_search(root, "b"));
 
+    ck_assert_int_eq(3, node_size(root));
+
     node_free(root);
 }
 END_TEST
@@ -101,30 +109,37 @@ END_TEST
 START_TEST(test_node_definition_simple)
 {
     node *root = node_new("simple", "haha");
-    node *a = node_new("a", "b");
-    node *b = node_new("b", "c");
-    node *c = node_new("c", "c");
+    char *definition = node_definition(root, "simple");
+
+    ck_assert_str_eq("haha", definition);
+
+    node_free(root);
+    free(definition);
+}
+END_TEST
+
+START_TEST(test_node_definition_compound)
+{
+    node *root = node_new("compound", "a+b+c");
+
+    node *a = node_new("a", "haha");
+    node *b = node_new("b", "you");
+    node *c = node_new("c", "lie");
 
     node_insert(root, a);
     node_insert(root, b);
     node_insert(root, c);
 
-    char *a_definition = node_definition(root, "a");
-    char *b_definition = node_definition(root, "a");
-    char *c_definition = node_definition(root, "a");
+    char *definition = node_definition(root, "compound");
 
-    ck_assert_str_eq("c", a_definition); // définition indirecte
-    ck_assert_str_eq("c", b_definition); // définition directe
-    ck_assert_str_eq("c", c_definition); // définition récursive
+    ck_assert_str_eq("haha you lie", definition);
 
     node_free(root);
-    free(a_definition);
-    free(b_definition);
-    free(c_definition);
+    free(definition);
 }
 END_TEST
 
-START_TEST(test_node_definition_compound)
+START_TEST(test_recursive_node_definition)
 {
     node *root = node_new("compound", "a+c+b");
 
