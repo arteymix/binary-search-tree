@@ -14,7 +14,7 @@
 
 \maketitle
 
-\section{}
+\section{Fonctionnement général du programme}
 Le programme est composé en deux parties: un programme principal qui traite les
 entrées de l'utilisateur et une définition de noeud avec toutes les fonctions
 qui s'y rapportent.
@@ -28,9 +28,8 @@ L'avantage principal d'utiliser \texttt{getline} est qu'il réalloue
 automatiquement le buffer si l'entrée de l'utilisateur est trop grande. Ce qui
 permet de lire des entrées arbitrairement grande.
 
-Ensuite, le programme est découpés en 5 branche: récupérer une définition,
-assigner une définition, supprimer une définition, imprimer l'arbre, quitter le
-programme et gérer les commandes invalides.
+Ensuite, le programme est découpés en trois branches: récupérer une définition,
+assigner une définition et supprimer une définition.
 
 La fonction \texttt{strtok} est utiliser pour découper les expressions contenant
 des \texttt{=} et \texttt{+} en symboles utilisables.
@@ -61,6 +60,9 @@ besoin d'appeler \texttt{free} sur la valeur retournée.
 Tandis que d'autres nécéssitent une gestion mémoire par l'appelant:
 \texttt{node\_new} et \texttt{node\_definition}.
 
+Le programme final remis respecte les normes de remise: tous les fichiers sont
+concaténés dans un seul fichier \texttt{tp1.c}.
+
 \subsection{Analyse syntaxique}
 L'analyse syntaxique d'un requête est faite à partir de \texttt{strtok}. On
 l'appele initialement avec une chaîne et un caractère qui découpe la chaîne en
@@ -77,21 +79,43 @@ chaîne et le symbole \texttt{=}, ce qui nous donne le terme. Tous les appels
 subséquent découpe sur le symbole \texttt{+}, ce qui nous donnes toutes les
 termes qui construisent la définition du terme donné.
 
+\texttt{strtok} est aussi utilisé pour analyser les expressions de la forme
+\texttt{<term>\{+<term>\}}.
+
+Pour faire l'analyse de manière récursive, \texttt{strtok} ne fonctionne pas,
+car il maintient un pointeur interne sur la chaîne. Dans le cas de
+\texttt{node\_definition}, la variante \texttt{strtok\_r} est utilisée. Il faut
+lui passer un pointeur qui est stocké dans la pile d'appel, ce qui permet de
+l'utiliser dans un cas de récurrence.
+
 \subsection{Représentation des dictionnaires et définitions}
 Un dictionnaire de définition est représenté par un arbre de recherche. Chaque
 noeud est composé d'un terme et d'une définition \texttt{term} est une chaîne et
-la définition \texttt{definition} est une chaîne. Il y a deux type de
-définition: simple et composée.
+la définition \texttt{definition} est une chaîne.
 
-Une définition simple comporte un seul élément. \texttt{voilier: bateau} est une
-définition simple.
+Tous les termes que comporte une définition sont séparés par des symboles
+\texttt{+}. Pour chaque terme, si il y a un noeud dans l'arbre qui le définit,
+on récupère sa définition, autrement le terme sera la définition.
 
-Une définition composée est séparée par au moins un symbole \texttt{+}.
-\texttt{voilier: bateau+voilé} est une définition composée.
+Étant donné \texttt{voilier=bateau} et \texttt{bateau=qui vogue sur l'eau}, on
+obtient la définition « qui vogue sur l'eau » pour le terme « voilier ».
+
+Étant donné \texttt{voilier=bateau+ à voile} et
+\texttt{bateau=qui vogue sur l'eau}, on obtient la définition « qui vogue sur
+l'eau à voile » pour le terme « voilier ».
+
+Par exemple, \texttt{bateau=bateau} est une définition récursive qui génère une
+boucle infinie dans le programme. C'est donc la responsabilité de l'utilisateur
+de ne pas soumettre des définition circulaire.
 
 L'ajout d'une définition se fait avec la fonction \texttt{node\_insert}. Il faut
 par contre vérifier si la définition n'est pas déjà dans l'arbre avec
 \texttt{node\_search} et remplacer la définition existante.
+
+L'implémentation n'utilise pas une liste de définition, mais construit plutôt
+une définition de manière récursive à chaque appel. Ce n'est pas exactement
+conforme à l'énoncé, mais c'est fonctionnel et il manque de temps pour faire une
+telle implémentation.
 
 \subsection{Traitement des erreurs}
 Les fonctions qui allouent de la mémoire retournent \texttt{NULL} lorsque cela
@@ -117,7 +141,8 @@ Pour éviter les fuites de mémoire, tout le code respecte les deux règles qui
 suivent:
 \begin{itemize}
 \item libérer les allocations locale à un bloc lorsque c'est possible
-\item retourner les allocations non libérée (responsabilité de l'appelant)
+\item retourner les allocations non libérée dans une fonction (responsabilité de
+l'appelant)
 \end{itemize}
 
 \end{document}

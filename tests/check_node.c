@@ -109,9 +109,10 @@ END_TEST
 START_TEST(test_node_definition_simple)
 {
     node *root = node_new("simple", "haha");
-    char *definition = node_definition(root, "simple");
+    char *definition = node_definition(root, root);
 
     ck_assert_str_eq("haha", definition);
+    ck_assert_ptr_ne(root->definition, definition);
 
     node_free(root);
     free(definition);
@@ -130,7 +131,7 @@ START_TEST(test_node_definition_compound)
     node_insert(root, b);
     node_insert(root, c);
 
-    char *definition = node_definition(root, "compound");
+    char *definition = node_definition(root, root);
 
     ck_assert_str_eq("haha you lie", definition);
 
@@ -151,7 +152,7 @@ START_TEST(test_recursive_node_definition)
     node_insert(root, b);
     node_insert(root, c);
 
-    char *definition = node_definition(root, "compound");
+    char *definition = node_definition(root, root);
 
     ck_assert_str_eq("haha you lie", definition);
 
@@ -172,6 +173,7 @@ Suite *node_suite(void)
     tcase_add_test(tc_core, test_node_search);
     tcase_add_test(tc_core, test_node_definition_simple);
     tcase_add_test(tc_core, test_node_definition_compound);
+    tcase_add_test(tc_core, test_recursive_node_definition);
 
     suite_add_tcase(s, tc_core);
 

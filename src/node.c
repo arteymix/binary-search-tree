@@ -238,27 +238,30 @@ node *node_delete(node *p, char *term)
  * @return la définition du noeud ou NULL si il n'y a plus d'espace pour allouer
  *         la définition.
  */
-char *node_definition(node *p, char *term)
+char *node_definition(node *p, node *n)
 {
-    node *n = node_search(p, term);
+    char *definition = malloc(sizeof(char) * (strlen(n->definition) + 1));
 
-    char *definition = malloc(sizeof(char) * (strlen(n->term) + strlen(n->definition) + 1));
-
-    // mémoire insuffisance pour allouer la définition ou faire une copie du terme
+    // mémoire insuffisante pour allouer la définition
     if (definition == NULL)
         return NULL;
 
+    char *n_definition = malloc(sizeof(char) * (strlen(n->definition) + 1));
+
+    // mémoire insuffisante pour copier la définition du noeud
+    if (n_definition == NULL)
+    {
+        free(definition);
+        return NULL;
+    }
+
     // on fait une copie de la définition du noeud
-    strcpy(definition, n->definition);
+    strcpy(n_definition, n->definition);
 
     // on tokenize la définition pour trouver les définitions des sous-termes
     char *saveptr;
-    char *token = strtok_r(definition, "+", &saveptr);
+    char *token = strtok_r(n_definition, "+", &saveptr);
 
-	/*
-	 * si la définition qu'on a mis est un sous-terme, on a déjà le premier
-	 * élément, alors on va récupérer les autres sous-termes.
-	 */
     do
     {
         // on trouve le noeud du sous-terme dans l'arbre
@@ -266,28 +269,39 @@ char *node_definition(node *p, char *term)
 
         // définition inconnue du sous-terme, on le saute
         if (s == NULL)
-            continue;
+        {
+            definition = realloc(definition, sizeof(char) * (strlen(definition) + strlen(token) + 1));
 
-        char *s_definition = s->definition;
+            // plus de place pour réallouer la définition
+            if (definition == NULL)
+                return NULL;
 
-		// on construit la sous-définition si ce n'est pas un noeud terminal
-        if (strcmp(s->term, s->definition) != 0)
-            s_definition = node_definition(p, s->term);
+            strcat(definition, token);
+        }
+        else
+        {
+            char *s_definition = node_definition(p, s);
 
-        /* réallocation d'espace pour stocker la définition courante, un espace,
-         * la définition du sous-noeud et une caractère de fin de ligne \0.
-         */
-        definition = realloc(definition, sizeof(char) * (strlen(definition) + strlen(s_definition) + 1));
+            if (s_definition == NULL)
+                return NULL;
 
-        // plus de place pour allouer la définition
-        if (definition == NULL)
-            return NULL;
+            /* réallocation d'espace pour stocker la définition courante, un espace,
+             * la définition du sous-noeud et une caractère de fin de ligne \0.
+             */
+            definition = realloc(definition, sizeof(char) * (strlen(definition) + strlen(s_definition) + 1));
 
-        // on concaténe le tout
-        strcat(definition, s_definition);
+            // plus de place pour allouer la définition
+            if (definition == NULL)
+            {
+                free(s_definition);
+                return NULL;
+            }
 
-        if (strcmp(s->term, s->definition) != 0)
+            // on concaténe le tout
+            strcat(definition, s_definition);
+
             free(s_definition);
+        }
     }
     while (token = strtok_r(NULL, "+", &saveptr));
 

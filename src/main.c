@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "node.c"
 
@@ -49,6 +50,7 @@ int main(void)
     size_t line_size = 1024 * sizeof(char);
     char *line = malloc(line_size);
 
+    begin:
     do
     {
         printf("? ");
@@ -65,6 +67,7 @@ int main(void)
 
         if (strchr(line, '='))
         {
+            int compound = strchr(line, '+');
             char *term = strtok(line, "=");
 
             // il s'agit d'une assignation de terme
@@ -83,13 +86,20 @@ int main(void)
             // on parse les arguments séparés par des signes +
             while (token = strtok(NULL, "+"))
             {
+                if (compound && node_search(root, token) == NULL)
+                {
+                    printf("terme inconnu\n");
+                    goto begin;
+                }
+
                 n->definition = realloc(n->definition, sizeof(char) * (strlen(n->definition) + 1 + strlen(token) + 1));
 
                 if (n->definition == NULL)
                 {
                     // plus de mémoire pour allouer la définition
                     printf("mémoire épuisée\n");
-                    continue;
+
+                    return EXIT_FAILURE;
                 }
 
                 // ajout à la définition du noeud
@@ -99,42 +109,35 @@ int main(void)
                 strcat(n->definition, token);
             }
 
-            printf("\n");
-
-            // l'arbre ne possède pas déjà le noeud
-            if (node_search(root, n->term) == NULL)
+            if (!node_search(root, n->term))
                 node_insert(root, n);
 
-            // l'utilisateur a vidée la définition et par conséquent supprimé le
-            // noeud
+            /* l'utilisateur a vidé la définition, il faut donc supprimer le
+             * noeud et libérer l'espace mémoire.
+             */
             if (strcmp("", n->definition) == 0)
             {
-                printf("Suppression du noeud %s...\n", n->term);
                 node *d = node_delete(root, n->term);
-                if (d == NULL)
-                {
-                    printf("on ne peut pas supprimer la racine");
-                }
-                else
-                {
-                    node_free(d);
-                }
-            }
 
-            node_print(root, 0);
+                // la racine ne peut pas être supprimée
+                if (d == NULL)
+                    continue;
+
+                node_free(d);
+            }
         }
-        else
+        else // récupération d'un terme
         {
             node *n = node_search(root, line);
 
             if (n == NULL)
             {
-                printf("terme inconnu\n", line);
+                printf("terme inconnu\n");
             }
             else
             {
                 // il s'agit d'une recherche de terme
-                char *d = node_definition(root, line);
+                char *d = node_definition(root, n);
 
                 if (d == NULL)
                 {
@@ -143,9 +146,8 @@ int main(void)
                 else
                 {
                     printf("%s\n", d);
+                    free(d);
                 }
-
-                free(d);
             }
         }
     }
