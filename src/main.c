@@ -92,15 +92,16 @@ int main(void)
                     goto begin;
                 }
 
-                n->definition = realloc(n->definition, sizeof(char) * (strlen(n->definition) + 1 + strlen(token) + 1));
+                char *tmp = realloc(n->definition, sizeof(char) * (strlen(n->definition) + 1 + strlen(token) + 1));
 
-                if (n->definition == NULL)
+                if (tmp == NULL)
                 {
                     // plus de mémoire pour allouer la définition
                     printf("mémoire épuisée\n");
-
-                    return EXIT_FAILURE;
+                    goto begin;
                 }
+
+                n->definition = tmp;
 
                 // ajout à la définition du noeud
                 if (strlen(n->definition) > 0)
