@@ -67,7 +67,7 @@ int main(void)
 
         if (strchr(line, '='))
         {
-            int compound = strchr(line, '+');
+            int compound = strchr(line, '+') != NULL;
             char *term = strtok(line, "=");
 
             // il s'agit d'une assignation de terme
